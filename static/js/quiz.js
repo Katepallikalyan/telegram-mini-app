@@ -211,4 +211,3 @@ function showQuizResults(data) {
         }
     }
 }
-
