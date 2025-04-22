@@ -165,4 +165,3 @@ function handleApiError(error) {
     console.error('API Error:', error);
     showAlert('There was an error connecting to the server. Please try again.', 'Error');
 }
-
