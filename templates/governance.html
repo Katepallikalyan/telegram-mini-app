@@ -1,1 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Governance | Learn & Earn Web3</title>
+    <!-- Bootstrap CSS from Replit CDN -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Telegram Web App script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Back button -->
+        <div class="mb-3">
+            <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="feather-icon"></i>
+                Back to Home
+            </a>
+        </div>
+
+        <header class="text-center mb-4">
+            <h1 class="h3 fw-bold">Governance</h1>
+            <p>Vote on community decisions using your token power</p>
+        </header>
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="check-square" class="feather-icon me-2"></i>
+                        Active Proposals
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if active_topics %}
+                        {% for topic in active_topics %}
+                        <div class="governance-item mb-4" data-topic-id="{{ topic.id }}">
+                            <h4 class="h5 mb-2">{{ topic.title }}</h4>
+                            <p class="text-muted mb-3">{{ topic.description }}</p>
+                            
+                            <div class="voting-options mb-3">
+                                {% for option in topic.options %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input vote-option" type="radio" 
+                                           name="vote-topic-{{ topic.id }}" 
+                                           id="option-{{ option.id }}" 
+                                           value="{{ option.id }}">
+                                    <label class="form-check-label" for="option-{{ option.id }}">
+                                        {{ option.text }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted">
+                                    <small>
+                                        <i data-feather="clock" class="feather-icon"></i>
+                                        Ends: {{ topic.end_date.strftime('%Y-%m-%d') }}
+                                    </small>
+                                </div>
+                                <button class="btn btn-sm btn-info submit-vote" data-topic-id="{{ topic.id }}">
+                                    <i data-feather="check" class="feather-icon"></i>
+                                    Cast Vote
+                                </button>
+                            </div>
+                            
+                            <!-- Results section (initially hidden) -->
+                            <div class="results-container mt-4 d-none" id="results-topic-{{ topic.id }}">
+                                <h5 class="h6 mb-3">Current Results</h5>
+                                <div class="chart-container" style="position: relative; height: 200px;">
+                                    <canvas id="results-chart-{{ topic.id }}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if not loop.last %}
+                        <hr class="my-4">
+                        {% endif %}
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="coffee" class="feather-icon text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="lead">No active proposals</p>
+                        <p class="text-muted">Check back later for new governance topics to vote on.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="archive" class="feather-icon me-2"></i>
+                        Past Proposals
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if past_topics %}
+                        {% for topic in past_topics %}
+                        <div class="governance-item mb-4" data-topic-id="{{ topic.id }}">
+                            <h4 class="h5 mb-2">{{ topic.title }}</h4>
+                            <p class="text-muted mb-3">{{ topic.description }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="text-muted">
+                                    <small>
+                                        <i data-feather="calendar" class="feather-icon"></i>
+                                        Ended: {{ topic.end_date.strftime('%Y-%m-%d') }}
+                                    </small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary view-results" data-topic-id="{{ topic.id }}">
+                                    <i data-feather="pie-chart" class="feather-icon"></i>
+                                    View Results
+                                </button>
+                            </div>
+                            
+                            <!-- Results section (initially hidden) -->
+                            <div class="results-container mt-3 d-none" id="results-past-{{ topic.id }}">
+                                <div class="chart-container" style="position: relative; height: 200px;">
+                                    <canvas id="results-past-chart-{{ topic.id }}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if not loop.last %}
+                        <hr class="my-4">
+                        {% endif %}
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="archive" class="feather-icon text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="lead">No past proposals yet</p>
+                        <p class="text-muted">Past proposals will be displayed here.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="info" class="feather-icon me-2"></i>
+                        How Governance Works
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-4 text-center mb-3 mb-md-0">
+                            <i data-feather="award" class="feather-icon text-primary mb-3" style="width: 48px; height: 48px;"></i>
+                            <h5 class="h6">Token Power</h5>
+                            <p class="small text-muted">Your vote weight equals your token balance (minimum 1).</p>
+                        </div>
+                        <div class="col-12 col-md-4 text-center mb-3 mb-md-0">
+                            <i data-feather="check-square" class="feather-icon text-success mb-3" style="width: 48px; height: 48px;"></i>
+                            <h5 class="h6">Voting Process</h5>
+                            <p class="small text-muted">Select an option and click "Cast Vote" to participate.</p>
+                        </div>
+                        <div class="col-12 col-md-4 text-center">
+                            <i data-feather="map" class="feather-icon text-info mb-3" style="width: 48px; height: 48px;"></i>
+                            <h5 class="h6">Implementation</h5>
+                            <p class="small text-muted">Winning votes will be implemented after voting ends.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-3 mt-4 bg-dark">
+        <div class="container text-center">
+            <p class="text-muted mb-0 small">
+                Powered by Telegram Mini Apps & Hathor Network
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/telegram.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/governance.js') }}"></script>
+
+    <script>
+        // Initialize feather icons
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+        });
+    </script>
+</body>
+</html>
 
