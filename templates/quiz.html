@@ -1,1 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if quiz %}{{ quiz.title }}{% else %}Quizzes - {{ topic }}{% endif %} | Learn & Earn Web3</title>
+    <!-- Bootstrap CSS from Replit CDN -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Telegram Web App script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Back button -->
+        <div class="mb-3">
+            <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="feather-icon"></i>
+                Back to Home
+            </a>
+        </div>
+
+        {% if quiz %}
+        <!-- Single Quiz View -->
+        <header class="text-center mb-4">
+            <h1 class="h3 fw-bold">{{ quiz.title }}</h1>
+            <p class="mb-1">{{ quiz.description }}</p>
+            <div class="badge bg-primary me-1">{{ quiz.topic }}</div>
+            <div class="badge bg-secondary">{{ quiz.difficulty }}</div>
+        </header>
+
+        <section class="mb-5" id="quiz-container">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="help-circle" class="feather-icon me-2"></i>
+                        Quiz Questions
+                    </h3>
+                    <span class="badge bg-light text-dark" id="question-counter">1 / {{ questions|length }}</span>
+                </div>
+                <div class="card-body">
+                    <form id="quiz-form" data-quiz-id="{{ quiz.id }}">
+                        <div class="quiz-progress mb-3">
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" 
+                                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="quiz-progress-bar">0%</div>
+                            </div>
+                        </div>
+
+                        {% for question in questions %}
+                        <div class="question-container {% if loop.index > 1 %}d-none{% endif %}" data-question-index="{{ loop.index }}" id="question-{{ question.id }}">
+                            <h4 class="h6 mb-3">{{ loop.index }}. {{ question.text }}</h4>
+                            
+                            <div class="options-container">
+                                {% for option in question.options %}
+                                <div class="form-check option-item mb-2">
+                                    <input class="form-check-input" type="radio" name="question-{{ question.id }}" 
+                                        id="option-{{ option.id }}" value="{{ option.id }}" required>
+                                    <label class="form-check-label" for="option-{{ option.id }}">
+                                        {{ option.text }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="mt-4 d-flex justify-content-between">
+                                {% if loop.index > 1 %}
+                                <button type="button" class="btn btn-outline-secondary prev-question">
+                                    <i data-feather="arrow-left" class="feather-icon"></i>
+                                    Previous
+                                </button>
+                                {% else %}
+                                <div></div>
+                                {% endif %}
+
+                                {% if loop.index < questions|length %}
+                                <button type="button" class="btn btn-primary next-question">
+                                    Next
+                                    <i data-feather="arrow-right" class="feather-icon"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-success" id="submit-quiz">
+                                    <i data-feather="check" class="feather-icon"></i>
+                                    Submit Quiz
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </form>
+
+                    <!-- Loading state -->
+                    <div id="quiz-loading" class="text-center py-5 d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Submitting your answers...</p>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i data-feather="clock" class="feather-icon text-muted"></i>
+                            <span class="small text-muted ms-1">Take your time, no time limit</span>
+                        </div>
+                        <div>
+                            <i data-feather="award" class="feather-icon text-success"></i>
+                            <span class="small text-success ms-1">Reward: {{ quiz.reward_tokens }} tokens</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% else %}
+        <!-- Quiz List View -->
+        <header class="text-center mb-4">
+            <h1 class="h3 fw-bold">{{ topic }} Quizzes</h1>
+            <p>Select a quiz to start learning and earning tokens</p>
+        </header>
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="list" class="feather-icon me-2"></i>
+                        Available Quizzes
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if quizzes %}
+                    <div class="list-group">
+                        {% for quiz in quizzes %}
+                        <a href="{{ url_for('get_quiz', quiz_id=quiz.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ quiz.title }}</h5>
+                                <span class="badge bg-success">{{ quiz.reward_tokens }} tokens</span>
+                            </div>
+                            <p class="mb-1">{{ quiz.description }}</p>
+                            <div class="d-flex w-100 justify-content-between">
+                                <small class="text-muted">Difficulty: {{ quiz.difficulty }}</small>
+                                <small class="text-success">
+                                    <i data-feather="award" class="feather-icon"></i>
+                                    Min score for reward: {{ quiz.min_score_for_reward * 100 }}%
+                                </small>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i data-feather="alert-circle" class="feather-icon text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="lead">No quizzes available for this topic yet.</p>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary mt-2">
+                            <i data-feather="arrow-left" class="feather-icon"></i>
+                            Back to Topics
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-3 mt-4 bg-dark">
+        <div class="container text-center">
+            <p class="text-muted mb-0 small">
+                Powered by Telegram Mini Apps & Hathor Network
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/telegram.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+
+    <script>
+        // Initialize feather icons
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+        });
+    </script>
+</body>
+</html>
 
