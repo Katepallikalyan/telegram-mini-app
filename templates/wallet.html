@@ -1,1 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet | Learn & Earn Web3</title>
+    <!-- Bootstrap CSS from Replit CDN -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Telegram Web App script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Back button -->
+        <div class="mb-3">
+            <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="feather-icon"></i>
+                Back to Home
+            </a>
+        </div>
+
+        <header class="text-center mb-4">
+            <h1 class="h3 fw-bold">Your Wallet</h1>
+            <p>View and manage your Hathor tokens</p>
+        </header>
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="credit-card" class="feather-icon me-2"></i>
+                        Token Balance
+                    </h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="balance-display mb-4">
+                        <div class="display-4 fw-bold">{{ user.token_balance }}</div>
+                        <div class="text-muted">Hathor Tokens</div>
+                    </div>
+
+                    <div class="wallet-address mb-4">
+                        <label class="form-label text-muted small mb-1">Your Hathor Wallet Address</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="wallet-address" 
+                                value="{{ user.hathor_address or '' }}" placeholder="Set your Hathor wallet address">
+                            <button class="btn btn-outline-secondary" type="button" id="update-address-btn">
+                                <i data-feather="save" class="feather-icon"></i>
+                                Save
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Your rewards will be sent to this address.
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i data-feather="info" class="feather-icon"></i>
+                            </div>
+                            <div>
+                                <h5 class="h6 alert-heading">How to earn more tokens?</h5>
+                                <p class="mb-0">Complete quizzes with at least 80% score to earn Hathor tokens. The higher your score, the more tokens you earn!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="clock" class="feather-icon me-2"></i>
+                        Transaction History
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if transactions %}
+                    <div class="list-group">
+                        {% for tx in transactions %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Quiz Reward</h6>
+                                <small class="text-muted">{{ tx.completed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div class="text-success">
+                                    <i data-feather="plus-circle" class="feather-icon"></i>
+                                    {{ tx.rewards_amount }} tokens
+                                </div>
+                                <div>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary view-tx-details" 
+                                       data-bs-toggle="modal" data-bs-target="#txDetailsModal"
+                                       data-tx-id="{{ tx.transaction_id }}"
+                                       data-tx-amount="{{ tx.rewards_amount }}"
+                                       data-tx-date="{{ tx.completed_at.strftime('%Y-%m-%d %H:%M') }}">
+                                        <i data-feather="eye" class="feather-icon"></i>
+                                        Details
+                                    </a>
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                Transaction ID: 
+                                <span class="transaction-id">{{ tx.transaction_id[:8] }}...{{ tx.transaction_id[-8:] }}</span>
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="inbox" class="feather-icon text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="lead">No transactions yet</p>
+                        <p class="text-muted">Complete quizzes to earn tokens and see your transaction history here.</p>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary mt-2">
+                            <i data-feather="book-open" class="feather-icon"></i>
+                            Take a Quiz
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="users" class="feather-icon me-2"></i>
+                        Governance Power
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p>Your token balance gives you voting power in governance decisions:</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Current Voting Power:</span>
+                        <span class="badge bg-info px-3 py-2">{{ user.token_balance|default(1, true) }} votes</span>
+                    </div>
+                    <div class="mt-3 text-end">
+                        <a href="{{ url_for('governance') }}" class="btn btn-outline-info">
+                            <i data-feather="check-square" class="feather-icon"></i>
+                            Vote on Topics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div class="modal fade" id="txDetailsModal" tabindex="-1" aria-labelledby="txDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="txDetailsModalLabel">Transaction Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Type:</span>
+                            <span>Quiz Reward</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Amount:</span>
+                            <span id="modal-tx-amount">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Date:</span>
+                            <span id="modal-tx-date"></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Transaction ID:</span>
+                            <span id="modal-tx-id" class="text-truncate" style="max-width: 200px;"></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Status:</span>
+                            <span class="badge bg-success">Confirmed</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="#" id="view-explorer-link" class="btn btn-primary" target="_blank">
+                        <i data-feather="external-link" class="feather-icon"></i>
+                        View in Explorer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-3 mt-4 bg-dark">
+        <div class="container text-center">
+            <p class="text-muted mb-0 small">
+                Powered by Telegram Mini Apps & Hathor Network
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/telegram.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/wallet.js') }}"></script>
+
+    <script>
+        // Initialize feather icons
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+            
+            // Setup modal data when clicking on transaction details
+            document.querySelectorAll('.view-tx-details').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const txId = this.getAttribute('data-tx-id');
+                    const txAmount = this.getAttribute('data-tx-amount');
+                    const txDate = this.getAttribute('data-tx-date');
+                    
+                    document.getElementById('modal-tx-id').textContent = txId;
+                    document.getElementById('modal-tx-amount').textContent = txAmount + ' tokens';
+                    document.getElementById('modal-tx-date').textContent = txDate;
+                    
+                    // Setup explorer link
+                    document.getElementById('view-explorer-link').href = `https://explorer.hathor.network/transaction/${txId}`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
 
