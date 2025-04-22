@@ -143,4 +143,3 @@ function handleTelegramError(error) {
     console.error('Telegram WebApp Error:', error);
     showNotification('Something went wrong. Please try again.');
 }
-
