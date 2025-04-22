@@ -1,1 +1,113 @@
+/* Custom styles for Learn & Earn Telegram Mini App */
+
+/* Global Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Card styling */
+.card {
+    border-radius: 10px;
+    transition: transform 0.2s;
+    overflow: hidden;
+}
+
+.topic-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--bs-primary);
+}
+
+.card-header {
+    padding: 0.8rem 1rem;
+}
+
+.feather-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: -0.125em;
+}
+
+/* Score chart on results page */
+.circle-score {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto;
+}
+
+.score-percent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* Transaction ID truncation */
+.transaction-id {
+    font-family: monospace;
+    font-size: 0.85em;
+}
+
+/* Quiz styling */
+.question-container {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.option-item {
+    border: 1px solid rgba(var(--bs-secondary-rgb), 0.2);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.option-item:hover {
+    border-color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.form-check-input:checked + .form-check-label {
+    font-weight: 600;
+}
+
+/* Wallet balance display */
+.balance-display {
+    padding: 1.5rem 0;
+}
+
+/* Governance voting */
+.governance-item {
+    position: relative;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .balance-display .display-4 {
+        font-size: 2.5rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
