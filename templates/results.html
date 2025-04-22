@@ -1,1 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results | Learn & Earn Web3</title>
+    <!-- Bootstrap CSS from Replit CDN -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Telegram Web App script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Back button -->
+        <div class="mb-3">
+            <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="feather-icon"></i>
+                Back to Home
+            </a>
+        </div>
+
+        <header class="text-center mb-4">
+            <h1 class="h3 fw-bold">Quiz Results</h1>
+            <p>{{ quiz.title }}</p>
+        </header>
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header {% if (attempt.score >= quiz.min_score_for_reward) %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="award" class="feather-icon me-2"></i>
+                        Your Score
+                    </h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="score-display mb-4">
+                        <div class="circle-score position-relative">
+                            <canvas id="scoreChart" width="200" height="200"></canvas>
+                            <div class="score-percent">
+                                {{ (attempt.score * 100)|int }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="h5 mb-3">
+                        {% if (attempt.score >= quiz.min_score_for_reward) %}
+                        <i data-feather="check-circle" class="feather-icon text-success"></i>
+                        Congratulations!
+                        {% else %}
+                        <i data-feather="x-circle" class="feather-icon text-danger"></i>
+                        Almost there!
+                        {% endif %}
+                    </h4>
+
+                    <div class="result-details mb-4">
+                        <p>
+                            {% if (attempt.score >= quiz.min_score_for_reward) %}
+                            You passed the quiz and earned rewards!
+                            {% else %}
+                            You need at least {{ (quiz.min_score_for_reward * 100)|int }}% to earn rewards.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    {% if attempt.rewards_paid %}
+                    <div class="reward-info alert alert-success">
+                        <h5 class="h6">
+                            <i data-feather="gift" class="feather-icon"></i>
+                            Rewards Sent!
+                        </h5>
+                        <p class="mb-2">You earned {{ attempt.rewards_amount }} tokens!</p>
+                        {% if attempt.transaction_id %}
+                        <small class="d-block text-muted">
+                            Transaction ID: 
+                            <span class="transaction-id small">{{ attempt.transaction_id[:8] }}...{{ attempt.transaction_id[-8:] }}</span>
+                        </small>
+                        {% endif %}
+                    </div>
+                    {% elif attempt.score >= quiz.min_score_for_reward %}
+                    <div class="reward-info alert alert-warning">
+                        <h5 class="h6">
+                            <i data-feather="clock" class="feather-icon"></i>
+                            Rewards Pending
+                        </h5>
+                        <p class="mb-0">Your rewards will be sent to your wallet soon.</p>
+                    </div>
+                    {% else %}
+                    <div class="reward-info alert alert-secondary">
+                        <h5 class="h6">
+                            <i data-feather="x" class="feather-icon"></i>
+                            No Rewards Earned
+                        </h5>
+                        <p class="mb-0">Try again to earn tokens!</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row g-2">
+                        <div class="col">
+                            <a href="{{ url_for('get_quiz', quiz_id=quiz.id) }}" class="btn btn-outline-primary w-100">
+                                <i data-feather="refresh-cw" class="feather-icon"></i>
+                                Try Again
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{{ url_for('wallet') }}" class="btn btn-outline-success w-100">
+                                <i data-feather="credit-card" class="feather-icon"></i>
+                                View Wallet
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">
+                        <i data-feather="help-circle" class="feather-icon me-2"></i>
+                        Quiz Information
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Topic:</span>
+                            <span class="badge bg-primary">{{ quiz.topic }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Difficulty:</span>
+                            <span class="badge bg-secondary">{{ quiz.difficulty }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Completed:</span>
+                            <span>{{ attempt.completed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Minimum score for reward:</span>
+                            <span>{{ (quiz.min_score_for_reward * 100)|int }}%</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Maximum reward:</span>
+                            <span>{{ quiz.reward_tokens }} tokens</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-3 mt-4 bg-dark">
+        <div class="container text-center">
+            <p class="text-muted mb-0 small">
+                Powered by Telegram Mini Apps & Hathor Network
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/telegram.js') }}"></script>
+
+    <script>
+        // Initialize feather icons
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+            
+            // Create score chart
+            const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+            const score = {{ attempt.score }};
+            const scoreChart = new Chart(scoreCtx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [score * 100, (1 - score) * 100],
+                        backgroundColor: [
+                            score >= {{ quiz.min_score_for_reward }} ? '#20c997' : '#dc3545',
+                            '#2c3136'
+                        ],
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
 
