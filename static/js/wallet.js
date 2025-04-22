@@ -134,4 +134,3 @@ function showNotification(message) {
 function formatTokenAmount(amount) {
     return parseFloat(amount).toFixed(2);
 }
-
